@@ -17,32 +17,33 @@ class WvDecrypt(object):
 
         def check_pssh(pssh_b64):
             pssh = base64.b64decode(pssh_b64)
-            if not pssh[12:28] == bytes(self.WV_SYSTEM_ID):
-                new_pssh = bytearray([0, 0, 0])
-                new_pssh.append(32 + len(pssh))
-                new_pssh[4:] = bytearray(b'pssh')
-                new_pssh[8:] = [0, 0, 0, 0]
-                new_pssh[13:] = self.WV_SYSTEM_ID
-                new_pssh[29:] = [0, 0, 0, 0]
-                new_pssh[31] = len(pssh)
-                new_pssh[32:] = pssh
-                return base64.b64encode(new_pssh)
-            else:
+            if pssh[12:28] == bytes(self.WV_SYSTEM_ID):
                 return pssh_b64
+            new_pssh = bytearray([0, 0, 0])
+            new_pssh.append(32 + len(pssh))
+            new_pssh[4:] = bytearray(b'pssh')
+            new_pssh[8:] = [0, 0, 0, 0]
+            new_pssh[13:] = self.WV_SYSTEM_ID
+            new_pssh[29:] = [0, 0, 0, 0]
+            new_pssh[31] = len(pssh)
+            new_pssh[32:] = pssh
+            return base64.b64encode(new_pssh)
 
         self.session = self.cdm.open_session(check_pssh(self.init_data_b64), deviceconfig.DeviceConfig(self.device))
         if self.cert_data_b64:
             self.cdm.set_service_certificate(self.session, self.cert_data_b64)
 
     def log_message(self, msg):
-        return '{}'.format(msg)
+        return f'{msg}'
 
     def start_process(self):
         keyswvdecrypt = []
         try:
-            for key in self.cdm.get_keys(self.session):
-                if key.type == 'CONTENT':
-                    keyswvdecrypt.append(self.log_message('{}:{}'.format(key.kid.hex(), key.key.hex())))
+            keyswvdecrypt.extend(
+                self.log_message(f'{key.kid.hex()}:{key.key.hex()}')
+                for key in self.cdm.get_keys(self.session)
+                if key.type == 'CONTENT'
+            )
 
         except Exception:
             return (

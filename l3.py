@@ -130,4 +130,4 @@ def WV_Function(pssh, lic_url, cert_b64=None):
 correct, keys = WV_Function(pssh, lic_url)
 
 for key in keys:
-	print('KID:KEY -> ' + key)
+	print(f'KID:KEY -> {key}')
